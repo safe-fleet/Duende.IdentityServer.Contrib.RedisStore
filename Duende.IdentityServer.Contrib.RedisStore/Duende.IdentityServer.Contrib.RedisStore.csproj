@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Version>1.0.0</Version>
+    <Authors>Safe Fleet</Authors>
+    <Description>Library Redis Store for operational data and for Caching of Duende Identity Server</Description>
+    <PackageTags>C#; SSO; Single Sign On; Duende Identity Server Redis Store; Library</PackageTags>
+    <Copyright>Safe Fleet 2021</Copyright>
+    <RepositoryUrl>https://github.com/safe-fleet/Duende.IdentityServer.Contrib.RedisStore</RepositoryUrl>
+    <RepositoryType>Public</RepositoryType>
+    <PackageProjectUrl>https://github.com/safe-fleet/Duende.IdentityServer.Contrib.RedisStore</PackageProjectUrl>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageIcon>favicon.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Duende.IdentityServer" Version="5.2.3" />
+    <PackageReference Include="Duende.IdentityServer.Storage" Version="5.2.3" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="StackExchange.Redis" Version="2.2.79" />
+  </ItemGroup>
+
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netcoreapp3.1\Duende.IdentityServer.Contrib.RedisStore.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netcoreapp3.1\Duende.IdentityServer.Contrib.RedisStore.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="favicon.png">
+      <Pack>True</Pack>
+      <PackagePath>favicon.png</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
