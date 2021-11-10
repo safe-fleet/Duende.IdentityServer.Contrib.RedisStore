@@ -1,11 +1,11 @@
 up:
-	make down
-	docker-compose up -d
+    make down
+    docker-compose up -d
 
 down:
-	docker-compose down
+    docker-compose down
 
 test:
-	make up
-	dotnet test
-	make down
+    make up
+    dotnet test
+    make down
