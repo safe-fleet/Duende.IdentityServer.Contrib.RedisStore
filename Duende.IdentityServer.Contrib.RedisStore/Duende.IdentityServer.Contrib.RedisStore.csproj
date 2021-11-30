@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Version>1.0.0</Version>
     <Authors>Safe Fleet</Authors>
     <Description>Library Redis Store for operational data and for Caching of Duende Identity Server</Description>
@@ -18,8 +18,9 @@
   <ItemGroup>
     <PackageReference Include="Duende.IdentityServer" Version="5.2.3" />
     <PackageReference Include="Duende.IdentityServer.Storage" Version="5.2.3" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
-    <PackageReference Include="StackExchange.Redis" Version="2.2.79" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="StackExchange.Redis" Version="2.2.88" />
   </ItemGroup>
 
 

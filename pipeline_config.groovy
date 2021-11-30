@@ -25,7 +25,7 @@ libraries{
 
   dotnet {
     build {
-      image = "mcr.microsoft.com/dotnet/core/sdk:3.1.412"
+      image = "mcr.microsoft.com/dotnet/sdk:6.0"
       solution = "Duende.IdentityServer.Contrib.RedisStore.sln"
     }
 
