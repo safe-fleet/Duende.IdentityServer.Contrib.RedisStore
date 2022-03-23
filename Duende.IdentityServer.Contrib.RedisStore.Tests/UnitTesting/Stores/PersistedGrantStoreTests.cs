@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using Duende.IdentityServer.Stores;
 
 namespace Duende.IdentityServer.Contrib.RedisStore.Tests.Stores
 {
@@ -92,6 +93,33 @@ namespace Duende.IdentityServer.Contrib.RedisStore.Tests.Stores
     }
 
     [Fact]
+    public async Task Store_And_Remove_Entries_Throw()
+    {
+      var now = DateTime.Now;
+      _clock.Setup(x => x.UtcNow).Returns(now);
+      string key = nameof(Store_And_Remove_Entries);
+      string expected = "this is a test";
+      var grant = new PersistedGrant
+      {
+        Key = key,
+        Data = expected,
+        ClientId = "client1",
+        SubjectId = "sub1",
+        Type = "type1",
+        Expiration = now.AddSeconds(1)
+      };
+      await _store.StoreAsync(grant);
+
+      await _store.RemoveAsync(key + ":lol");
+
+      await _store.RemoveAsync(key);
+
+      var actual = await _store.GetAsync(key);
+
+      Assert.Null(actual);
+    }
+
+    [Fact]
     public async Task RemoveAll_Entries()
     {
       var now = DateTime.Now;
@@ -122,6 +150,28 @@ namespace Duende.IdentityServer.Contrib.RedisStore.Tests.Stores
       })).ToList();
 
       Assert.Empty(actual);
+    }
+
+
+    [Fact]
+    public async Task RemoveAll_Entries_Throw()
+    {
+      var now = DateTime.Now;
+      _clock.Setup(x => x.UtcNow).Returns(now);
+      string subjectId = $"{nameof(RemoveAll_Entries)}-subjectId";
+      var expected = new PersistedGrant
+      {
+        Key = $"{nameof(RemoveAll_Entries)}-{now:O}-{1}",
+        SubjectId = subjectId,
+        Expiration = now.AddSeconds(2),
+        ClientId = "client1",
+        Type = "type1",
+      };
+
+      await _store.StoreAsync(expected);
+      await _store.RemoveAllAsync(new PersistedGrantFilter {ClientId = "client1"});
+      await Assert.ThrowsAsync<ArgumentNullException>(() => _store.RemoveAllAsync(null));
+      await Assert.ThrowsAsync<ArgumentException>(() => _store.RemoveAllAsync(new PersistedGrantFilter()));
     }
 
     [Fact]
@@ -281,6 +331,83 @@ namespace Duende.IdentityServer.Contrib.RedisStore.Tests.Stores
 
       Assert.NotNull(actual);
       actual.Should().BeEquivalentTo(expected);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_When_Filter_Is_Null()
+    {
+      var now = DateTime.Now;
+      _clock.Setup(x => x.UtcNow).Returns(now);
+      string subjectId = $"{nameof(GetAllAsync_When_Filter_Is_Null)}-subjectId";
+      var expected = Enumerable.Range(0, 5).Select(x =>
+          new PersistedGrant
+          {
+            Key = $"{nameof(GetAllAsync_When_Filter_Is_Null)}-{now:O}-{x}",
+            SubjectId = subjectId,
+            Expiration = now.AddSeconds(2),
+            ClientId = "client1",
+            Type = "type1",
+          }
+      ).ToList();
+      Task.WaitAll(expected.Select(x => _store.StoreAsync(x)).ToArray());
+
+      await Assert.ThrowsAsync<ArgumentNullException>(() => _store.GetAllAsync(null));
+    }
+
+    [Fact]
+    public async Task IsMatch_When_Filter_And_Grand_Is_Null()
+    {
+      var now = DateTime.Now;
+      _clock.Setup(x => x.UtcNow).Returns(now);
+      string subjectId = $"{nameof(GetAllAsync_When_Filter_Is_Null)}-subjectId";
+      var expected = Enumerable.Range(0, 5).Select(x =>
+          new PersistedGrant
+          {
+            Key = $"{nameof(GetAllAsync_When_Filter_Is_Null)}-{now:O}-{x}",
+            SubjectId = subjectId,
+            Expiration = now.AddSeconds(2),
+            ClientId = "client1",
+            Type = "type1",
+          }
+      ).ToList();
+      Task.WaitAll(expected.Select(x => _store.StoreAsync(x)).ToArray());
+
+      Assert.Throws<ArgumentNullException>(() => PersistedGrantStore.IsMatch(expected.FirstOrDefault(), null));
+      Assert.Throws<ArgumentNullException>(() => PersistedGrantStore.IsMatch(null, new IdentityServer.Stores.PersistedGrantFilter
+      {
+        SubjectId = subjectId
+      }));
+    }
+
+    [Fact]
+    public async Task IsMatch_Return_True_And_False()
+    {
+      var now = DateTime.Now;
+      _clock.Setup(x => x.UtcNow).Returns(now);
+      string subjectId = $"{nameof(GetAllAsync_When_Filter_Is_Null)}-subjectId";
+      var expected = Enumerable.Range(0, 5).Select(x =>
+          new PersistedGrant
+          {
+            Key = $"{nameof(GetAllAsync_When_Filter_Is_Null)}-{now:O}-{x}",
+            SubjectId = subjectId,
+            Expiration = now.AddSeconds(2),
+            ClientId = "client1",
+            Type = "type1",
+          }
+      ).ToList();
+      Task.WaitAll(expected.Select(x => _store.StoreAsync(x)).ToArray());
+
+      var filter = new IdentityServer.Stores.PersistedGrantFilter
+      {
+        SubjectId = subjectId,
+        ClientId = "client1",
+        Type = "type1",
+      };
+
+      Assert.True(PersistedGrantStore.IsMatch(expected.FirstOrDefault(), filter));
+      filter.ClientId = "client2";
+      Assert.False(PersistedGrantStore.IsMatch(expected.FirstOrDefault(), filter));
+
     }
 
     [Fact]
@@ -451,6 +578,23 @@ namespace Duende.IdentityServer.Contrib.RedisStore.Tests.Stores
 
       Assert.NotNull(actual);
       Assert.Empty(actual);
+    }
+
+
+    [Fact]
+    public async Task GetAllAsync_Try_Catch()
+    {
+      var now = DateTime.Now;
+      _clock.Setup(x => x.UtcNow).Returns(now);
+      string subjectId = $"{nameof(GetAllAsync_Does_Not_Retrieve_Expired_Grants)}-subjectId";
+      var expected = new PersistedGrant
+      {
+        Key = $"{nameof(GetAllAsync_Does_Not_Retrieve_Expired_Grants)}-{now:O}-{1}",
+        Expiration = now.AddSeconds(-1),
+        ClientId = "client1",
+        Type = "type1",
+      };
+      await Assert.ThrowsAsync<StackExchange.Redis.RedisServerException>(() => _store.StoreAsync(expected));
     }
   }
 }

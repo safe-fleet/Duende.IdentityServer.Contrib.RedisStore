@@ -1,4 +1,4 @@
-﻿using StackExchange.Redis;
+using StackExchange.Redis;
 using StackExchange.Redis.Profiling;
 using System;
 using System.IO;
@@ -53,4 +53,9 @@ namespace Duende.IdentityServer.Contrib.RedisStore.Tests.Fakes
         public T Wait<T>(Task<T> task) => default;
         public void WaitAll(params Task[] tasks) { }
     }
+
+  internal class FakeConnectionMultiplexerAux : FakeConnectionMultiplexer
+  {
+    public bool IsFake { get; set; }
+  }
 }

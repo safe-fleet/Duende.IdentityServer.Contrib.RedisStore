@@ -37,6 +37,7 @@ namespace Duende.IdentityServer.Contrib.RedisStore.Tests.Cache
       Assert.Throws<ArgumentNullException>(() => new RedisCache<string>(multiplexer, null));
     }
 
+
     [Fact]
     public async Task SetAsync_Stores_Entries()
     {
@@ -64,6 +65,50 @@ namespace Duende.IdentityServer.Contrib.RedisStore.Tests.Cache
       actual = await _cache.GetAsync(key);
 
       Assert.Null(actual);
+    }
+
+    [Fact]
+    public async Task GetOrAddAsync_Return_Data_Value()
+    {
+      string key = nameof(GetOrAddAsync_Return_Data_Value);
+      string expected = "test_value";
+      var actual =  await _cache.GetOrAddAsync(key, TimeSpan.FromSeconds(10),
+        () => {
+          var s = "test_value";
+          return Task.FromResult(s);
+      });
+
+      Assert.Equal(expected, actual);
+
+      actual = await _cache.GetOrAddAsync(key, TimeSpan.FromSeconds(10),
+        () => {
+          var s = "test_value";
+          return Task.FromResult(s);
+        });
+
+      Assert.Equal(expected, actual);
+
+    }
+
+    [Fact]
+    public async Task RemoveAsync()
+    {
+      string key = nameof(GetOrAddAsync_Return_Data_Value);
+      string expected = "test_value";
+      var actual = await _cache.GetOrAddAsync(key, TimeSpan.FromSeconds(10),
+        () => {
+          var s = "test_value";
+          return Task.FromResult(s);
+        });
+
+      Assert.Equal(expected, actual);
+
+      await _cache.RemoveAsync(key);
+
+      actual = await _cache.GetAsync(key);
+
+      Assert.Null(actual);
+
     }
   }
 }

@@ -36,8 +36,8 @@ namespace Duende.IdentityServer.Contrib.RedisStore
         // in that case we must disconnect so we don't leak anything.
         if (this.multiplexer.IsValueCreated && this.multiplexer.Value != this.providedMultiplexer)
         {
-          this.multiplexer.Value.Dispose();
-          this.multiplexer = new Lazy<IConnectionMultiplexer>(() => value);
+          multiplexer.Value.Dispose();
+          multiplexer = new Lazy<IConnectionMultiplexer>(() => value);
         }
 
         this.providedMultiplexer = value;
@@ -66,31 +66,39 @@ namespace Duende.IdentityServer.Contrib.RedisStore
       }
     }
 
-    internal RedisOptions()
+    /// <summary>
+    /// internal instance of multiplexer
+    /// </summary>
+    protected RedisOptions()
     {
       this.multiplexer = GetConnectionMultiplexer();
     }
 
-    private Lazy<IConnectionMultiplexer> GetConnectionMultiplexer()
+
+    /// <summary>
+    /// Get Connnection
+    /// </summary>
+    /// <returns></returns>
+    public Lazy<IConnectionMultiplexer> GetConnectionMultiplexer()
     {
       return new Lazy<IConnectionMultiplexer>(
           () =>
           {
-                  // if the user provided a multiplexer, we should use it
-                  if (this.providedMultiplexer != null)
+            // if the user provided a multiplexer, we should use it
+            if (this.providedMultiplexer != null)
             {
               return this.providedMultiplexer;
             }
 
-                  // otherwise we must make our own connection
-                  return string.IsNullOrEmpty(this.RedisConnectionString)
-                      ? ConnectionMultiplexer.Connect(this.ConfigurationOptions)
-                      : ConnectionMultiplexer.Connect(this.RedisConnectionString);
+            // otherwise we must make our own connection
+            return string.IsNullOrEmpty(this.RedisConnectionString)
+                ? ConnectionMultiplexer.Connect(this.ConfigurationOptions)
+                : ConnectionMultiplexer.Connect(RedisConnectionString);
           });
     }
 
-    private IConnectionMultiplexer providedMultiplexer = null;
-    private Lazy<IConnectionMultiplexer> multiplexer = null;
+    private IConnectionMultiplexer providedMultiplexer;
+    private Lazy<IConnectionMultiplexer> multiplexer;
 
     internal IConnectionMultiplexer Multiplexer => this.multiplexer.Value;
   }
@@ -100,7 +108,6 @@ namespace Duende.IdentityServer.Contrib.RedisStore
   /// </summary>
   public class RedisOperationalStoreOptions : RedisOptions
   {
-
   }
 
   /// <summary>
@@ -108,6 +115,5 @@ namespace Duende.IdentityServer.Contrib.RedisStore
   /// </summary>
   public class RedisCacheOptions : RedisOptions
   {
-
   }
 }

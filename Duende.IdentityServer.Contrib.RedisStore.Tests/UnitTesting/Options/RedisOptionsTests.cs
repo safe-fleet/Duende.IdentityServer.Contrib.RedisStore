@@ -44,6 +44,29 @@ namespace Duende.IdentityServer.Contrib.RedisStore.Tests.Options
     }
 
     [Fact]
+    public void Multiplexer_And_ConnectionString_Provided_Uses_Provided_Multiplexer_Dispose()
+    {
+      var cacheOptions = new RedisCacheOptions()
+      {
+        RedisConnectionString = "fake", // if connection is made, this will throw
+        RedisConnectionMultiplexer = new FakeConnectionMultiplexer()
+      };
+
+      cacheOptions.KeyPrefix = "test";
+      cacheOptions.Db = -1;
+      _ = cacheOptions.KeyPrefix;
+      _ = cacheOptions.ConfigurationOptions;
+      cacheOptions.ConfigurationOptions = new StackExchange.Redis.ConfigurationOptions();
+
+      cacheOptions = new RedisCacheOptions();
+      cacheOptions.RedisConnectionString = ConfigurationUtils.GetConfiguration()["Redis:ConnectionString"];
+      _ = cacheOptions.RedisConnectionMultiplexer;
+      cacheOptions.RedisConnectionMultiplexer = new FakeConnectionMultiplexerAux();
+      Assert.IsType<FakeConnectionMultiplexerAux>(cacheOptions.RedisConnectionMultiplexer);
+
+    }
+
+    [Fact]
     public void ConnectionString_Provided_Makes_Connection()
     {
       var cacheOptions = new RedisCacheOptions()

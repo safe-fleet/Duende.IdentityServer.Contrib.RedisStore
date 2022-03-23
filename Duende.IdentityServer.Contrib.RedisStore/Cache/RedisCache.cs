@@ -73,25 +73,47 @@ namespace Duende.IdentityServer.Contrib.RedisStore.Cache
     }
 
     #region Json
-    private JsonSerializerOptions SerializerSettings
+
+    /// <summary>
+    /// Get Serializer Options
+    /// </summary>
+    /// <returns></returns>
+    public JsonSerializerOptions GetSerializerSettings()
     {
-      get
-      {
-        var settings = new JsonSerializerOptions();
-        settings.Converters.Add(new ClaimConverter());
-        return settings;
-      }
+      var settings = new JsonSerializerOptions();
+      settings.Converters.Add(new ClaimConverter());
+      return settings;
     }
 
     private T Deserialize(string json)
     {
-      return JsonSerializer.Deserialize<T>(json, this.SerializerSettings);
+      return JsonSerializer.Deserialize<T>(json, GetSerializerSettings());
     }
 
     private string Serialize(T item)
     {
-      return JsonSerializer.Serialize(item, this.SerializerSettings);
+      return JsonSerializer.Serialize(item, GetSerializerSettings());
     }
     #endregion
+
+    /// <inheritdoc/>
+    public async Task<T> GetOrAddAsync(string key, TimeSpan duration, Func<Task<T>> get)
+    {
+      var item = await GetAsync(key);
+      if (item == null)
+      {
+        item = await get();
+        await SetAsync(key, item, duration);
+      }
+      return item;
+    }
+
+    /// <inheritdoc/>
+    public Task RemoveAsync(string key)
+    {
+      key = GetKey(key);
+      database.KeyDelete(key);
+      return Task.CompletedTask;
+    }
   }
 }
