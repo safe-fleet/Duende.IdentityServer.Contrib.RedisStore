@@ -4,3 +4,5 @@ services:
     image: redis:latest
     ports:
       - "6379:6379"
+    restart: always
+    container_name: ${COMPOSE_PROJECT_NAME}

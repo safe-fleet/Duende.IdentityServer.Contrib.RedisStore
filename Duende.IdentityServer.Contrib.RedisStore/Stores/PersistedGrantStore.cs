@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -277,8 +278,10 @@ namespace Duende.IdentityServer.Contrib.RedisStore.Stores
     /// </summary>
     /// <param name="filter"></param>
     /// <returns></returns>
-    public virtual async Task RemoveAllAsync(PersistedGrantFilter filter)
+    public virtual async Task RemoveAllAsync([NotNull] PersistedGrantFilter filter)
     {
+      if (filter is null)
+        throw new ArgumentNullException(nameof(filter));
       try
       {
         filter.Validate();
@@ -320,14 +323,17 @@ namespace Duende.IdentityServer.Contrib.RedisStore.Stores
     /// </summary>
     /// <param name="filter"></param>
     /// <returns></returns>
-    protected virtual string GetSetKey(PersistedGrantFilter filter) =>
-        (!filter.ClientId.IsNullOrEmpty(), !filter.SessionId.IsNullOrEmpty(), !filter.Type.IsNullOrEmpty()) switch
-        {
-          (true, true, false) => GetSetKeyWithSession(filter.SubjectId, filter.ClientId, filter.SessionId),
-          (true, _, false) => GetSetKey(filter.SubjectId, filter.ClientId),
-          (true, _, true) => GetSetKeyWithType(filter.SubjectId, filter.ClientId, filter.Type),
-          _ => GetSetKey(filter.SubjectId),
-        };
+    protected virtual string GetSetKey([NotNull] PersistedGrantFilter filter)
+    {
+      if (filter is null) throw new ArgumentNullException(nameof(filter));
+      return (!filter.ClientId.IsNullOrEmpty(), !filter.SessionId.IsNullOrEmpty(), !filter.Type.IsNullOrEmpty()) switch
+      {
+        (true, true, false) => GetSetKeyWithSession(filter.SubjectId, filter.ClientId, filter.SessionId),
+        (true, _, false) => GetSetKey(filter.SubjectId, filter.ClientId),
+        (true, _, true) => GetSetKeyWithType(filter.SubjectId, filter.ClientId, filter.Type),
+        _ => GetSetKey(filter.SubjectId),
+      };
+    }
 
     /// <summary>
     ///
@@ -335,12 +341,14 @@ namespace Duende.IdentityServer.Contrib.RedisStore.Stores
     /// <param name="grant"></param>
     /// <param name="filter"></param>
     /// <returns></returns>
-    protected bool IsMatch(PersistedGrant grant, PersistedGrantFilter filter)
+    public static bool IsMatch([NotNull] PersistedGrant grant, [NotNull] PersistedGrantFilter filter)
     {
+      if (filter is null) throw new ArgumentNullException(nameof(filter));
+      if (grant is null) throw new ArgumentNullException(nameof(grant));
       return (filter.SubjectId.IsNullOrEmpty() || grant.SubjectId == filter.SubjectId)
-          && (filter.ClientId.IsNullOrEmpty() || grant.ClientId == filter.ClientId)
-          && (filter.SessionId.IsNullOrEmpty() || grant.SessionId == filter.SessionId)
-          && (filter.Type.IsNullOrEmpty() || grant.Type == filter.Type);
+      && (filter.ClientId.IsNullOrEmpty() || grant.ClientId == filter.ClientId)
+      && (filter.SessionId.IsNullOrEmpty() || grant.SessionId == filter.SessionId)
+      && (filter.Type.IsNullOrEmpty() || grant.Type == filter.Type);
     }
 
     #region Json

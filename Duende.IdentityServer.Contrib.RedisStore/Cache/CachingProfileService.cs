@@ -64,13 +64,12 @@ namespace Duende.IdentityServer.Services
 
       if (options.ShouldCache(context))
       {
-        var entry = await cache.GetAsync(key, options.Expiration,
+        var entry = await cache.GetOrAddAsync(key, options.Expiration,
                       async () =>
                       {
                         await inner.IsActiveAsync(context);
                         return new IsActiveContextCacheEntry { IsActive = context.IsActive };
-                      },
-                      logger);
+                      });
 
         context.IsActive = entry.IsActive;
       }

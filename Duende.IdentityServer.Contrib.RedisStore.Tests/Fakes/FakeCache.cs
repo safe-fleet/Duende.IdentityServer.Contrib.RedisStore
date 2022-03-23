@@ -1,4 +1,4 @@
-﻿using Duende.IdentityServer.Services;
+using Duende.IdentityServer.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System;
@@ -31,7 +31,24 @@ namespace Duende.IdentityServer.Contrib.RedisStore.Tests.Cache
             return Task.FromResult((T)result);
         }
 
-        public Task SetAsync(string key, T item, TimeSpan expiration)
+    public async Task<T> GetOrAddAsync(string key, TimeSpan duration, Func<Task<T>> get)
+    {
+      var item = await GetAsync(key);
+      if (item == null)
+      {
+        item = await get();
+        await SetAsync(key, item, duration);
+      }
+      return item;
+    }
+
+    public Task RemoveAsync(string key)
+    {
+      cache.Remove(key);
+      return Task.CompletedTask;
+    }
+
+    public Task SetAsync(string key, T item, TimeSpan expiration)
         {
             cache.Set(key, item, expiration);
             return Task.CompletedTask;
